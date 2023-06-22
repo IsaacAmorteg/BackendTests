@@ -55,7 +55,7 @@ namespace Task9
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
-            var setUserStatusResponse = await _userServiceClient.SetUserStatus(response.Body, true);
+            await _userServiceClient.SetUserStatus(response.Body, true);
             //Action
             var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
             //Assert
@@ -75,7 +75,7 @@ namespace Task9
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
-            var setUserStatusResponse = await _userServiceClient.SetUserStatus(response.Body, true);
+            await _userServiceClient.SetUserStatus(response.Body, true);
             var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amountCharged);
             var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
 
@@ -98,7 +98,7 @@ namespace Task9
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
-            var setUserStatusResponse = await _userServiceClient.SetUserStatus(response.Body, true);
+            await _userServiceClient.SetUserStatus(response.Body, true);
             var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amountCharged);
             var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
             //Action
@@ -117,7 +117,7 @@ namespace Task9
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
-            var setUserStatusResponse = await _userServiceClient.SetUserStatus(response.Body, true);
+            await _userServiceClient.SetUserStatus(response.Body, true);
             //Action
             double[] amountsCharged = { 10, 20.5, 30, -15 };
             
@@ -143,7 +143,7 @@ namespace Task9
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
-            var setUserStatusResponse = await _userServiceClient.SetUserStatus(response.Body, true);
+            await _userServiceClient.SetUserStatus(response.Body, true);
             //Action
             double[] amountsCharged = { 10, 20.5, 30, -10, -20, -30, -0.5 };
 
@@ -162,6 +162,154 @@ namespace Task9
                 Assert.AreEqual(expectedBalance, getBalanceResponse.Body);
             });
 
+        }
+
+        [Test]
+        public async Task T7_WalletService_GetBalance_MultipleTransactionsCharged_ReturnsBalanceZeroDecimalOne()
+        {
+            //Precondition
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            var response = await _userServiceClient.RegisterNewUser(request);
+            await _userServiceClient.SetUserStatus(response.Body, true);
+            //Action
+            double[] amountsCharged = { 10, 20.5, 30, -10, -20, -30, -0.4 };
+
+            foreach (double amount in amountsCharged)
+            {
+                var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
+                var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
+            }
+
+            var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
+            var expectedBalance = 0.1;
+            //Assert
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(HttpStatusCode.OK, getBalanceResponse.Status);
+                Assert.AreEqual(expectedBalance, getBalanceResponse.Body);
+            });
+
+        }
+        [Test]
+        public async Task T8_WalletService_GetBalance_MultipleTransactionsChargedNonSufficientFunds_BalanceIsLastBalanceWithOKChargePerformed()
+        {
+            //Precondition
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            var response = await _userServiceClient.RegisterNewUser(request);
+            await _userServiceClient.SetUserStatus(response.Body, true);
+            //Action
+            double[] amountsCharged = { 10, 20.5, 30, -10, -20, -30, -0.4, -0.8, -9999999.91 };
+
+            foreach (double amount in amountsCharged)
+            {
+                var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
+                var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
+            }
+
+            var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
+            var expectedBalance = 0.1;
+            //Assert
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(HttpStatusCode.OK, getBalanceResponse.Status);
+                Assert.AreEqual(expectedBalance, getBalanceResponse.Body);
+            });
+
+        }
+        [Test]
+        public async Task T9_WalletService_GetBalance_MultipleTransactionsCharged_OverallBalance9999999_99()
+        {
+            //Precondition
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            var response = await _userServiceClient.RegisterNewUser(request);
+            await _userServiceClient.SetUserStatus(response.Body, true);
+            //Action
+            double[] amountsCharged = { 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 999999.99 };
+
+            foreach (double amount in amountsCharged)
+            {
+                var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
+                var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
+            }
+
+            var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
+            var expectedBalance = 9999999.99;
+            //Assert
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(HttpStatusCode.OK, getBalanceResponse.Status);
+                Assert.AreEqual(expectedBalance, getBalanceResponse.Body);
+            });
+
+        }
+        [Test]
+        public async Task T10_WalletService_GetBalance_MultipleTransactionsCharged_OverallBalance10000000()
+        {
+            //Precondition
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            var response = await _userServiceClient.RegisterNewUser(request);
+            await _userServiceClient.SetUserStatus(response.Body, true);
+            //Action
+            double[] amountsCharged = { 1000000, -1000000, 10000000 };
+
+            foreach (double amount in amountsCharged)
+            {
+                var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
+                await _walletServiceClient.BalanceCharge(chargeRequest);
+            }
+
+            var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
+            var expectedBalance = 10000000.0;
+            //Assert
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(HttpStatusCode.OK, getBalanceResponse.Status);
+                Assert.AreEqual(expectedBalance, getBalanceResponse.Body);
+            });
+
+        }
+        [Test]
+        public async Task T11_WalletService_GetBalance_MultipleTransactionsStatusToInactive_Returns500()
+        {
+            //Precondition
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            var response = await _userServiceClient.RegisterNewUser(request);
+            await _userServiceClient.SetUserStatus(response.Body, true);
+            //Action
+            double[] amountsCharged = { 10, 20.5, 30, -15 };
+
+            foreach (double amount in amountsCharged)
+            {
+                var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
+                await _walletServiceClient.BalanceCharge(chargeRequest);
+            }
+
+            await _userServiceClient.SetUserStatus(response.Body, false);
+            var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
+
+            //Assert
+            Assert.AreEqual(HttpStatusCode.InternalServerError, getBalanceResponse.Status);
+
+        }
+        [Test]
+        public async Task T12_WalletService_GetBalance_NoTransactionsChargeNegativeBalance_Return200ZeroBalance()
+        {
+            //Precondition
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            var response = await _userServiceClient.RegisterNewUser(request);
+            await _userServiceClient.SetUserStatus(response.Body, true);
+            double chargeAmount = -100;
+            var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, chargeAmount);
+            var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
+            //Action
+            var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
+            double expectedBalance = 0;
+            //Assert
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(HttpStatusCode.OK, getBalanceResponse.Status);
+                Assert.AreEqual(expectedBalance, getBalanceResponse.Body);
+            });
         }
     }
 }
