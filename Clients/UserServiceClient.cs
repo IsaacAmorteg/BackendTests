@@ -8,6 +8,7 @@ using Task9.Extensions;
 using Task9.Models.Responses.Base;
 using Task9.Models.Requests;
 using System.Collections.Concurrent;
+using Task9.Interfaces;
 
 namespace Task9.Clients
 {
@@ -51,6 +52,12 @@ namespace Task9.Clients
             };
 
             HttpResponseMessage response = await _client.DeleteAsync(httpRequestMessage.RequestUri);
+
+            if(response.IsSuccessStatusCode)
+            {
+                NotifyUserDeleted(userId);                
+            }
+
             return await response.ToCommonResponse<object>();
         }
 
@@ -114,21 +121,30 @@ namespace Task9.Clients
             return commonResponse;
         }
 
-        private readonly ConcurrentBag<IObserver<int>> _observers = new ConcurrentBag<IObserver<int>>();
+        private readonly ConcurrentBag<IObserverWithRemove<int>> _observers = new ConcurrentBag<IObserverWithRemove<int>>();
 
         public IDisposable Subscribe(IObserver<int> observer)
         {
-            _observers.Add(observer);
+            _observers.Add((IObserverWithRemove<int>)observer);
 
             return null;
         }
 
         public void NotifyAllObservers(int userId)
         {
-            foreach(IObserver<int> observer in _observers)
+            foreach(IObserverWithRemove<int> observer in _observers)
             {
                 observer.OnNext(userId);
             }
         }
+
+        public void NotifyUserDeleted(int userId)
+        {
+            foreach(IObserverWithRemove<int> observer in _observers)
+            {
+                observer.RemoveUser(userId);                
+            }
+        }
+
     }
 }

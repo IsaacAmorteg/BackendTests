@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Task9.Clients;
+using Task9.Interfaces;
 
 namespace Task9
 {
@@ -34,7 +35,7 @@ namespace Task9
         }
     }
 
-    public class TestDataObserver : IObserver<int>
+    public class TestDataObserver : IObserverWithRemove<int>
     {
         private readonly ConcurrentBag<int> _storage = new ConcurrentBag<int>();
         public void OnCompleted()
@@ -55,6 +56,11 @@ namespace Task9
         public IEnumerable<int> GetUsersToDelete()
         {
             return _storage.ToArray();
+        }
+
+        public void RemoveUser(int userId)
+        {
+            _storage.TryTake(out userId);
         }
     }
 }

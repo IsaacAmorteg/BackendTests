@@ -21,7 +21,7 @@ namespace Task9
             //Action
             var response = await _userServiceClient.RegisterNewUser(request);
             //Assert            
-
+            Console.WriteLine(response.Body);
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(HttpStatusCode.OK, response.Status);
@@ -393,6 +393,7 @@ namespace Task9
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
             await _userServiceClient.DeleteUser(response.Body);
+            Console.WriteLine(response.Body);
             //Action
             var deleteUserResponse2 = await _userServiceClient.DeleteUser(response.Body);
             //Assert
