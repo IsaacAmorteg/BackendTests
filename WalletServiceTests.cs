@@ -15,7 +15,7 @@ namespace Task9
     {
         private readonly WalletServiceClient _walletServiceClient = new WalletServiceClient();
         private readonly BalanceChargeGenerator _balanceChargeGenerator = new BalanceChargeGenerator();
-        private readonly UserServiceClient _userServiceClient = new UserServiceClient();
+        private readonly UserServiceClient _userServiceClient = UserServiceClient.Instance;
         private readonly UserGenerator _userGenerator = new UserGenerator();
         private readonly int _nonExistingUserId = 0;
         private readonly string _notActiveErrorMessage = "not active user";

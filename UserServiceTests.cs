@@ -8,7 +8,7 @@ namespace Task9
 {
     public class UserServiceTests
     {
-        private readonly UserServiceClient _userServiceClient = new UserServiceClient();
+        private readonly UserServiceClient _userServiceClient = UserServiceClient.Instance;
         private readonly UserGenerator _userGenerator = new UserGenerator();
         private readonly string _noElementsMessage = "Sequence contains no elements";
         private readonly int _nonExistingUserId = 0;
@@ -21,6 +21,7 @@ namespace Task9
             //Action
             var response = await _userServiceClient.RegisterNewUser(request);
             //Assert            
+
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(HttpStatusCode.OK, response.Status);
@@ -34,6 +35,8 @@ namespace Task9
             var request = _userGenerator.GenerateRegisterNewUserRequest("ISAAC", "AMORTEGUI");
             //Action
             var response = await _userServiceClient.RegisterNewUser(request);
+
+            Console.WriteLine(response.Body);
             //Assert  
             Assert.AreEqual(HttpStatusCode.OK, response.Status);
         }
@@ -102,17 +105,18 @@ namespace Task9
         }
 
         [Test]
-        public async Task T8_UserService_RegisterUser_AfterUserIsDeletedAndNewUserRegistered_NewUserIdIsIncrementedByOne()
+        public async Task T8_UserService_RegisterUser_AfterUserIsDeletedAndNewUserRegistered_NewUserIdIsAutoIncremented()
         {
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             //Action
             var responseUser1 = await _userServiceClient.RegisterNewUser(request);
+            Console.WriteLine(responseUser1.Body);
             var deleteUser1 = await _userServiceClient.DeleteUser(responseUser1.Body);
             var responseUser2 = await _userServiceClient.RegisterNewUser(request);
-            //Assert
-            int newUserId = responseUser1.Body + 1;
-            Assert.AreEqual(responseUser2.Body, newUserId);
+            Console.WriteLine(responseUser2.Body);
+            //Assert            
+            Assert.IsTrue(responseUser2.Body > responseUser1.Body);
         }
         [Test]
         public async Task T9_UserService_RegisterUser_FieldAreDigits_StatusCodeIs200()

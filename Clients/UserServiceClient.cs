@@ -7,11 +7,17 @@ using System.Threading.Tasks;
 using Task9.Extensions;
 using Task9.Models.Responses.Base;
 using Task9.Models.Requests;
+using System.Collections.Concurrent;
 
 namespace Task9.Clients
 {
-    public class UserServiceClient
+    public class UserServiceClient: IObservable<int>
     {
+
+        private static readonly Lazy<UserServiceClient> _lazy = new Lazy<UserServiceClient>(() => new UserServiceClient());
+
+        public  static UserServiceClient Instance => _lazy.Value;
+
         private readonly HttpClient _client = new HttpClient();
         private readonly string _baseUrl = "https://userservice-uat.azurewebsites.net";
 
@@ -25,6 +31,14 @@ namespace Task9.Clients
             };
 
             HttpResponseMessage response = await _client.SendAsync(httpRequestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var userId = await response.ToCommonResponse<int>();
+
+                NotifyAllObservers(userId.Body);
+            }                
+
             return await response.ToCommonResponse<Int32>();
         }
 
@@ -100,6 +114,21 @@ namespace Task9.Clients
             return commonResponse;
         }
 
+        private readonly ConcurrentBag<IObserver<int>> _observers = new ConcurrentBag<IObserver<int>>();
 
+        public IDisposable Subscribe(IObserver<int> observer)
+        {
+            _observers.Add(observer);
+
+            return null;
+        }
+
+        public void NotifyAllObservers(int userId)
+        {
+            foreach(IObserver<int> observer in _observers)
+            {
+                observer.OnNext(userId);
+            }
+        }
     }
 }
