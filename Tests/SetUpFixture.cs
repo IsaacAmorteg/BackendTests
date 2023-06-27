@@ -8,24 +8,24 @@ using System.Threading.Tasks;
 using Task9.Clients;
 using Task9.Interfaces;
 
-namespace Task9
+namespace Task9.Tests
 {
     [SetUpFixture]
     public class SetUpFixture
     {
         private TestDataObserver _observer;
         private readonly UserServiceClient _client = UserServiceClient.Instance;
-
+       
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
             _observer = new TestDataObserver();
-            _client.Subscribe(_observer);
+            _client.Subscribe(_observer);          
         }
 
         [OneTimeTearDown]
         public async Task OneTimeTearDown()
-        {      
+        {
 
             var tasks = _observer.GetUsersToDelete()
                         .Select(user => _client.DeleteUser(user));
