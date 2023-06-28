@@ -123,27 +123,35 @@ namespace Task9.Clients
 
         private readonly ConcurrentBag<IObserverWithRemove<int>> _observers = new ConcurrentBag<IObserverWithRemove<int>>();
 
+        private readonly object _lock = new object();
+
         public IDisposable Subscribe(IObserver<int> observer)
         {
-            _observers.Add((IObserverWithRemove<int>)observer);
+
+                _observers.Add((IObserverWithRemove<int>)observer);
+
 
             return null;
         }
 
         public void NotifyAllObservers(int userId)
         {
-            foreach(IObserverWithRemove<int> observer in _observers)
-            {
-                observer.OnNext(userId);
-            }
+
+                foreach (IObserverWithRemove<int> observer in _observers)
+                {
+                    observer.OnNext(userId);
+                }
+            
         }
 
         public void NotifyUserDeleted(int userId)
         {
-            foreach(IObserverWithRemove<int> observer in _observers)
-            {
-                observer.RemoveUser(userId);                
-            }
+
+                foreach (IObserverWithRemove<int> observer in _observers)
+                {
+                    observer.RemoveUser(userId);
+                }
+            
         }
 
     }

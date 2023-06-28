@@ -574,6 +574,3 @@ namespace Task9.Tests
         }
     }
 }
-//Precondition
-//Action
-//Assert

@@ -15,12 +15,12 @@ namespace Task9.Tests
     {
         private TestDataObserver _observer;
         private readonly UserServiceClient _client = UserServiceClient.Instance;
-       
+
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
             _observer = new TestDataObserver();
-            _client.Subscribe(_observer);          
+            _client.Subscribe(_observer);
         }
 
         [OneTimeTearDown]
@@ -34,10 +34,29 @@ namespace Task9.Tests
 
         }
     }
-
     public class TestDataObserver : IObserverWithRemove<int>
     {
-        private readonly ConcurrentBag<int> _storage = new ConcurrentBag<int>();
+        private readonly List<int> _storage = new List<int>();
+        public void OnNext(int value)
+        {
+
+            _storage.Add(value);
+
+        }
+
+        public IEnumerable<int> GetUsersToDelete()
+        {
+            return _storage.ToList();
+
+        }
+
+        public void RemoveUser(int userId)
+        {
+
+            _storage.RemoveAll(x => x == userId);
+
+        }
+
         public void OnCompleted()
         {
             throw new NotImplementedException();
@@ -46,21 +65,6 @@ namespace Task9.Tests
         public void OnError(Exception error)
         {
             throw new NotImplementedException();
-        }
-
-        public void OnNext(int value)
-        {
-            _storage.Add(value);
-        }
-
-        public IEnumerable<int> GetUsersToDelete()
-        {
-            return _storage.ToArray();
-        }
-
-        public void RemoveUser(int userId)
-        {
-            _storage.TryTake(out userId);
         }
     }
 }

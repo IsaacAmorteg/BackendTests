@@ -8,7 +8,7 @@ namespace Task9.Models.Requests
 {
     public class BalanceChargeRequest
     {
-        public int userId;
+        public int? userId;
         public double? amount;
     }
 }
