@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 using Task9.Clients;
 using Task9.Utils;
 
-namespace Task9
+namespace Task9.Tests
 {
     public class WalletServiceTests
     {
         private readonly WalletServiceClient _walletServiceClient = new WalletServiceClient();
         private readonly BalanceChargeGenerator _balanceChargeGenerator = new BalanceChargeGenerator();
-        private readonly UserServiceClient _userServiceClient = new UserServiceClient();
+        private readonly UserServiceClient _userServiceClient = UserServiceClient.Instance;
         private readonly UserGenerator _userGenerator = new UserGenerator();
         private readonly int _nonExistingUserId = 0;
         private readonly string _notActiveErrorMessage = "not active user";
@@ -24,7 +24,7 @@ namespace Task9
 
 
         [Test]
-        public async Task T1_WalletService_GetBalance_NewUser_ReturnsNotActiveUser500() 
+        public async Task T1_WalletService_GetBalance_NewUser_ReturnsNotActiveUser500()
         {
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
@@ -41,7 +41,7 @@ namespace Task9
 
         }
         [Test]
-        public async Task T2_WalletService_GetBalance_NonExistingUser_ReturnsNotActiveUser500() 
+        public async Task T2_WalletService_GetBalance_NonExistingUser_ReturnsNotActiveUser500()
         {
             //Action
             var getBalanceResponse = await _walletServiceClient.GetBalance(_nonExistingUserId);
@@ -67,7 +67,7 @@ namespace Task9
             {
                 Assert.AreEqual(HttpStatusCode.OK, getBalanceResponse.Status);
                 Assert.AreEqual(expected, getBalanceResponse.Body);
-            });            
+            });
         }
         [TestCase(10, 10.0)]
         [TestCase(0.01, 0.01)]
@@ -123,13 +123,13 @@ namespace Task9
             await _userServiceClient.SetUserStatus(response.Body, true);
             //Action
             double[] amountsCharged = { 10, 20.5, 30, -15 };
-            
+
             foreach (double amount in amountsCharged)
-              {
-                 var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
-                 var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
-              }
-            
+            {
+                var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, amount);
+                var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
+            }
+
             var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
             var expectedBalance = 45.5;
             //Assert
@@ -350,10 +350,10 @@ namespace Task9
             //Assert            
             var getBalanceResponse = await _walletServiceClient.GetBalance(response.Body);
             var contentErrorMessage = $"User have '{getBalanceResponse.Body}', you try to charge '{chargeAmount}.0'.";
-            
+
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);                
+                Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);
                 Assert.AreEqual(Guid.Empty, chargeResponse.Body);
                 Assert.AreEqual(contentErrorMessage, chargeResponse.Content);
             });
@@ -379,7 +379,7 @@ namespace Task9
                 Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);
                 Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse2.Status);
                 Assert.AreEqual(Guid.Empty, chargeResponse2.Body);
-                
+
             });
         }
 
@@ -422,7 +422,7 @@ namespace Task9
             //Assert
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(HttpStatusCode.OK, chargeResponse.Status);                
+                Assert.AreEqual(HttpStatusCode.OK, chargeResponse.Status);
                 Assert.AreNotEqual(Guid.Empty, chargeResponse.Body);
             });
         }
@@ -440,15 +440,15 @@ namespace Task9
             //Assert
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);                
-                Assert.AreEqual(Guid.Empty, chargeResponse.Body); 
+                Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);
+                Assert.AreEqual(Guid.Empty, chargeResponse.Body);
                 Assert.AreEqual(_notActiveErrorMessage, chargeResponse.Content);
-            });            
+            });
         }
         [TestCase(145)]
         [TestCase(-23.5)]
         public async Task T19_WalletService_Charge_NonExistingUser_ReturnsTransactionIdEmptyCode500AndBodyMessage(double chargeAmount)
-        {            
+        {
             //Action
             var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(_nonExistingUserId, chargeAmount);
             var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
@@ -473,7 +473,7 @@ namespace Task9
             //Action
             var chargeRequest = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, initialBalance);
             var chargeResponse = await _walletServiceClient.BalanceCharge(chargeRequest);
-            var chargeRequest2 = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, (-initialBalance - 0.01));
+            var chargeRequest2 = _balanceChargeGenerator.GenerateBalanceChargeRequest(response.Body, -initialBalance - 0.01);
             var chargeResponse2 = await _walletServiceClient.BalanceCharge(chargeRequest2);
             var balanceResponse2 = await _walletServiceClient.GetBalance(response.Body);
             //Assert
@@ -507,7 +507,7 @@ namespace Task9
                 Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse2.Status);
                 Assert.AreEqual(Guid.Empty, chargeResponse2.Body);
                 Assert.AreEqual(expectedErrorMessage, chargeResponse2.Content);
-            });      
+            });
         }
 
         [TestCase(10000000.01)]
@@ -528,10 +528,10 @@ namespace Task9
             var expectedErrorMessage = $"After this charge balance could be '{chargeAmount.ToString("0.00", culture)}', maximum user balance is '10000000'";
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);                
+                Assert.AreEqual(HttpStatusCode.InternalServerError, chargeResponse.Status);
                 Assert.AreEqual(Guid.Empty, chargeResponse.Body);
                 Assert.AreEqual(expectedErrorMessage, chargeResponse.Content);
-            });            
+            });
         }
 
         [TestCase(0.001)]
@@ -574,6 +574,3 @@ namespace Task9
         }
     }
 }
-//Precondition
-//Action
-//Assert

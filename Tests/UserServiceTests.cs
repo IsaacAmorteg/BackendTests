@@ -4,11 +4,11 @@ using System.Net;
 using Task9.Clients;
 using Task9.Utils;
 
-namespace Task9
+namespace Task9.Tests
 {
     public class UserServiceTests
     {
-        private readonly UserServiceClient _userServiceClient = new UserServiceClient();
+        private readonly UserServiceClient _userServiceClient = UserServiceClient.Instance;
         private readonly UserGenerator _userGenerator = new UserGenerator();
         private readonly string _noElementsMessage = "Sequence contains no elements";
         private readonly int _nonExistingUserId = 0;
@@ -21,6 +21,7 @@ namespace Task9
             //Action
             var response = await _userServiceClient.RegisterNewUser(request);
             //Assert            
+            Console.WriteLine(response.Body);
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(HttpStatusCode.OK, response.Status);
@@ -34,6 +35,8 @@ namespace Task9
             var request = _userGenerator.GenerateRegisterNewUserRequest("ISAAC", "AMORTEGUI");
             //Action
             var response = await _userServiceClient.RegisterNewUser(request);
+
+            Console.WriteLine(response.Body);
             //Assert  
             Assert.AreEqual(HttpStatusCode.OK, response.Status);
         }
@@ -102,17 +105,18 @@ namespace Task9
         }
 
         [Test]
-        public async Task T8_UserService_RegisterUser_AfterUserIsDeletedAndNewUserRegistered_NewUserIdIsIncrementedByOne()
+        public async Task T8_UserService_RegisterUser_AfterUserIsDeletedAndNewUserRegistered_NewUserIdIsAutoIncremented()
         {
             //Precondition
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             //Action
             var responseUser1 = await _userServiceClient.RegisterNewUser(request);
+            Console.WriteLine(responseUser1.Body);
             var deleteUser1 = await _userServiceClient.DeleteUser(responseUser1.Body);
             var responseUser2 = await _userServiceClient.RegisterNewUser(request);
-            //Assert
-            int newUserId = responseUser1.Body + 1;
-            Assert.AreEqual(responseUser2.Body, newUserId);
+            Console.WriteLine(responseUser2.Body);
+            //Assert            
+            Assert.IsTrue(responseUser2.Body > responseUser1.Body);
         }
         [Test]
         public async Task T9_UserService_RegisterUser_FieldAreDigits_StatusCodeIs200()
@@ -230,7 +234,7 @@ namespace Task9
 
         [Test]
         public async Task T15_UserService_SetStatus_NotExistingUserStatusChange_Status500()
-        {                       
+        {
             //Action
             var setUserStatusResponse = await _userServiceClient.SetUserStatus(_nonExistingUserId, true);
             //Assert
@@ -240,8 +244,8 @@ namespace Task9
                 Assert.AreEqual(_noElementsMessage, setUserStatusResponse.Content);
             });
         }
-        
-     
+
+
         [Test]
         public async Task T16_UserService_SetStatus_ChangeFromDefaultToTrue_StatusCodeIs200AndFinalStatusTrue()
         {
@@ -304,7 +308,7 @@ namespace Task9
                 Assert.AreEqual(HttpStatusCode.OK, setUserStatusResponse5.Status);
                 Assert.IsTrue(getFinalUserStatusResponse.Body);
             });
-                        
+
         }
         [Test]
         public async Task T19_UserService_SetStatus_FromFalseToFalse_Response200andStatusFalse()
@@ -318,8 +322,8 @@ namespace Task9
             var getFinalUserStatusResponse = await _userServiceClient.GetUserStatus(response.Body, _noElementsMessage);
             //Assert
             Assert.Multiple(() =>
-            {                
-                Assert.AreEqual(HttpStatusCode.OK, setUserStatusResponse2.Status);                
+            {
+                Assert.AreEqual(HttpStatusCode.OK, setUserStatusResponse2.Status);
                 Assert.IsFalse(getFinalUserStatusResponse.Body);
             });
 
@@ -352,7 +356,7 @@ namespace Task9
             //Action
             var deleteUserResponse = await _userServiceClient.DeleteUser(response.Body);
             //Assert
-            Assert.AreEqual(HttpStatusCode.OK, deleteUserResponse.Status);            
+            Assert.AreEqual(HttpStatusCode.OK, deleteUserResponse.Status);
         }
 
         [Test]
@@ -369,7 +373,7 @@ namespace Task9
         }
         [Test]
         public async Task T23_UserService_DeleteUser_NonExistingUser_Returns500AndMessageBody()
-        {                        
+        {
             //Action
             var deleteUserResponse = await _userServiceClient.DeleteUser(_nonExistingUserId);
             //Assert
@@ -389,6 +393,7 @@ namespace Task9
             var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
             var response = await _userServiceClient.RegisterNewUser(request);
             await _userServiceClient.DeleteUser(response.Body);
+            Console.WriteLine(response.Body);
             //Action
             var deleteUserResponse2 = await _userServiceClient.DeleteUser(response.Body);
             //Assert

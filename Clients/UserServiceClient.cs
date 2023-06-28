@@ -7,11 +7,18 @@ using System.Threading.Tasks;
 using Task9.Extensions;
 using Task9.Models.Responses.Base;
 using Task9.Models.Requests;
+using System.Collections.Concurrent;
+using Task9.Interfaces;
 
 namespace Task9.Clients
 {
-    public class UserServiceClient
+    public class UserServiceClient: IObservable<int>
     {
+
+        private static readonly Lazy<UserServiceClient> _lazy = new Lazy<UserServiceClient>(() => new UserServiceClient());
+
+        public  static UserServiceClient Instance => _lazy.Value;
+
         private readonly HttpClient _client = new HttpClient();
         private readonly string _baseUrl = "https://userservice-uat.azurewebsites.net";
 
@@ -25,6 +32,14 @@ namespace Task9.Clients
             };
 
             HttpResponseMessage response = await _client.SendAsync(httpRequestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var userId = await response.ToCommonResponse<int>();
+
+                NotifyAllObservers(userId.Body);
+            }                
+
             return await response.ToCommonResponse<Int32>();
         }
 
@@ -37,6 +52,12 @@ namespace Task9.Clients
             };
 
             HttpResponseMessage response = await _client.DeleteAsync(httpRequestMessage.RequestUri);
+
+            if(response.IsSuccessStatusCode)
+            {
+                NotifyUserDeleted(userId);                
+            }
+
             return await response.ToCommonResponse<object>();
         }
 
@@ -100,6 +121,38 @@ namespace Task9.Clients
             return commonResponse;
         }
 
+        private readonly ConcurrentBag<IObserverWithRemove<int>> _observers = new ConcurrentBag<IObserverWithRemove<int>>();
+
+        private readonly object _lock = new object();
+
+        public IDisposable Subscribe(IObserver<int> observer)
+        {
+
+                _observers.Add((IObserverWithRemove<int>)observer);
+
+
+            return null;
+        }
+
+        public void NotifyAllObservers(int userId)
+        {
+
+                foreach (IObserverWithRemove<int> observer in _observers)
+                {
+                    observer.OnNext(userId);
+                }
+            
+        }
+
+        public void NotifyUserDeleted(int userId)
+        {
+
+                foreach (IObserverWithRemove<int> observer in _observers)
+                {
+                    observer.RemoveUser(userId);
+                }
+            
+        }
 
     }
 }

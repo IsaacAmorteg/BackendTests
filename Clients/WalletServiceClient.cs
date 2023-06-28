@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Task9.Extensions;
+using Task9.Interfaces;
 using Task9.Models.Requests;
 using Task9.Models.Responses.Base;
 
@@ -12,6 +14,7 @@ namespace Task9.Clients
 {
     public class WalletServiceClient
     {
+
         private readonly HttpClient _client = new HttpClient();
         private readonly string _baseUrl = "https://walletservice-uat.azurewebsites.net";
 
@@ -37,7 +40,14 @@ namespace Task9.Clients
             };
 
             HttpResponseMessage response = await _client.SendAsync(httpRequestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                UserServiceClient.Instance.NotifyUserDeleted((int)request.userId);
+            }
+
             return await response.ToCommonResponse<Guid>();
         }
+
     }
 }
