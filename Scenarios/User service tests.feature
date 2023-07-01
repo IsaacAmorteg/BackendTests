@@ -48,27 +48,21 @@ Scenario: Register valid user and Id is auto incremented after user is deleted a
 	Given Second user is created
 	Then User Id is auto incremented for two users
 
-Scenario: Get updated status for new user - from false to true
-	Given New user is created
-	When Change user IsActive status to true	
-	And Get user status	
-	Then Get user status response Status Code is OK
-	And User status is true 
+Scenario Outline: Get updated status for new user 
+	Given New user is created with name '<FirstName>' and last name '<LastName>'
+	When Change user IsActive status to '<ChangeStatusTo>'
+	And Change user IsActive status to '<ChangeStatusTo2>'
+	And Get user status
+	Then Get user status response Status Code is '<StatusReponseCode>'
+	And User status is '<ActualUserStatus>'
 
-Scenario: Get updated status for new user - from true to true
-	Given New user is created
-	When Change user IsActive status to true
-	And Change user IsActive status to true
-	And Get user status	
-	Then Get user status response Status Code is OK
-	And User status is true 
+	Examples: 
+	| FirstName | LastName | ChangeStatusTo | ChangeStatusTo2 | StatusReponseCode | ActualUserStatus |
+	| Test      | TestLast | True           | True            | OK                | True             |
+	| Test      | TestLast | True           | False           | OK                | False            |
+	| Test      | TestLast | False          | False           | OK                | False            |
+	| Test      | TestLast | False          | True            | OK                | True             |	
 
-Scenario: Get updated status for new user - from default to false
-	Given New user is created
-	When Change user IsActive status to false	
-	And Get user status	
-	Then Get user status response Status Code is OK
-	And User status is false 
 
 Scenario: Get user status for non existing user - status is Internal Server Error
 	Given A non existing user
@@ -90,42 +84,39 @@ Scenario: Get user status for deleted user - status is Internal Server Error-Err
 
 Scenario: Set user status to non existing user - Response status is Internal Server Error
 	Given A non existing user
-	When Change user IsActive status to true
-	Then Set user status to true response is Internal Server Error
-	And Set user status to true response body is error message - NonExistingUser
+	When Change user IsActive status to 'true'
+	Then Set user status response Status Code is 'Internal Server Error'
+	And Set user status response body is error message - NonExistingUser
 
-Scenario: Set user status from default false to true 
+Scenario Outline: Set user status
 	Given New user is created
-	When Change user IsActive status to true
+	When Change user IsActive status to '<ChangeStatusTo>'
+	And Change user IsActive status to '<ChangeStatusTo2>'
 	And Get user status
-	Then Set user status to true response is OK
-	And User status is true
+	Then Set user status response Status Code is '<ResponseStatusCode>'
+	And User status is '<ActualUserStatus>'
 
-Scenario: Set user status from true to true 
-	Given New user is created
-	When Change user IsActive status to true
-	And Change user IsActive status to true
-	And Get user status
-	Then Set user status to true response is OK
-	And User status is true
+	Examples: 
+	| ChangeStatusTo | ChangeStatusTo2 | ResponseStatusCode | ActualUserStatus |
+	| True           | True            | OK                 | True             |
+	| False          | False           | OK                 | False            |
 
-Scenario: Set user status from false to false 
-	Given New user is created	
-	When Change user IsActive status to false
-	And Get user status
-	Then Set user status to false response is OK
-	And User status is false
 
 Scenario: Delete User for non active new created user - status is OK
 	Given New user is created
 	When User is deleted
 	Then Delete User Response is OK
 
-Scenario: Delete user for active new created user - status is OK
+Scenario Outline: Delete User with different IsActive Status
 	Given New user is created
-	When Change user IsActive status to true
+	When Change user IsActive status to '<ChangeStatusTo>'
 	And User is deleted
 	Then Delete User Response is OK
+
+	Examples: 
+	| ChangeStatusTo |
+	| True           |
+	| False          |
 
 Scenario: Delete non existing user - status is Internal Server Error and Error Message
 	Given A non existing user
@@ -139,3 +130,5 @@ Scenario: Delete an already deleted user - status is Internal Server Error and E
 	And User is deleted
 	Then Delete user response is Internal Server Error
 	And Delete user response body is Error Message-NonExistingUser
+
+

@@ -90,41 +90,10 @@ namespace Task9.Steps
             Assert.IsFalse(_context.GetUserStatusResponse.Body);
         }
 
-        [Then(@"Set user status to true response is Internal Server Error")]
-        public void ThenSetUserStatusToTrueResponseIsInternalServerError()
+        [Then(@"Set user status response body is error message - NonExistingUser")]
+        public void ThenSetUserStatusResponseBodyIsErrorMessage_NonExistingUser()
         {
-            Assert.AreEqual(HttpStatusCode.InternalServerError, _context.SetUserStatusToTrueResponse.Status);
-        }
-
-        [Then(@"Set user status to true response body is error message - NonExistingUser")]
-        public void ThenSetUserStatusToTrueResponseBodyIsErrorMessage_NonExistingUser()
-        {
-            Assert.AreEqual(_context.NoElementsMessage, _context.SetUserStatusToTrueResponse.Content);
-        }
-
-        [Then(@"Set user status to false response is Internal Server Error")]
-        public void ThenSetUserStatusToFalseResponseIsInternalServerError()
-        {
-            Assert.AreEqual(HttpStatusCode.InternalServerError, _context.SetUserStatusToFalseResponse.Status);
-        }
-
-        [Then(@"Set user status to false response body is error message - NonExistingUser")]
-        public void ThenSetUserStatusToFalseResponseBodyIsErrorMessage_NonExistingUser()
-        {
-            Assert.AreEqual(_context.NoElementsMessage, _context.SetUserStatusToFalseResponse.Content);
-        }
-
-        [Then(@"Set user status to true response is OK")]
-        public void ThenSetUserStatusToTrueResponseIsOK()
-        {
-            Assert.AreEqual(HttpStatusCode.OK, _context.SetUserStatusToTrueResponse.Status);
-        }
-        
-
-        [Then(@"Set user status to false response is OK")]
-        public void ThenSetUserStatusToFalseResponseIsOK()
-        {
-            Assert.AreEqual(HttpStatusCode.OK, _context.SetUserStatusToFalseResponse.Status);
+            Assert.AreEqual(_context.NoElementsMessage, _context.SetUserStatusResponse.Content);
         }
 
         [Then(@"Delete User Response is OK")]
@@ -144,6 +113,45 @@ namespace Task9.Steps
         {
             Assert.AreEqual(_context.NoElementsMessage, _context.DeleteUserResponse.Content);
         }
+
+        [Then(@"Get user status response Status Code is '([^']*)'")]
+        public void ThenGetUserStatusResponseStatusCodeIs(string responseStatusCode)
+        {
+            if (responseStatusCode == "OK")
+            {
+                Assert.AreEqual(HttpStatusCode.OK, _context.GetUserStatusResponse.Status);
+            }
+            else
+            {
+                Assert.AreEqual(HttpStatusCode.InternalServerError, _context.GetUserStatusResponse.Status);
+            }
+
+            
+        }
+
+        [Then(@"User status is '([^']*)'")]
+        public void ThenUserStatusIs(bool status)
+        {
+            if (status == null)
+            {
+                Assert.AreEqual(_context.NoElementsMessage, _context.GetUserStatusResponse.Content);
+            }          
+            
+        }
+
+        [Then(@"Set user status response Status Code is '([^']*)'")]
+        public void ThenSetUserStatusResponseStatusCodeIs(string responseStatusCode)
+        {
+            if (responseStatusCode == "OK")
+            {
+                Assert.AreEqual(HttpStatusCode.OK, _context.SetUserStatusResponse.Status);
+            }
+            else
+            {
+                Assert.AreEqual(HttpStatusCode.InternalServerError, _context.SetUserStatusResponse.Status);
+            }
+        }
+
 
 
 

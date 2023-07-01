@@ -35,6 +35,16 @@ namespace Task9.Steps
         }
 
 
+        [Given(@"New user is created and activated")]
+        public async Task GivenNewUserIsCreatedAndActivated()
+        {
+            var request = _userGenerator.GenerateRegisterNewUserRequest("I", "A");
+            _context.RegisterNewUserResponse = await _userServiceClient.RegisterNewUser(request);
+            _context.UserId = _context.RegisterNewUserResponse.Body;
+            _context.SetUserStatusResponse = await _userServiceClient.SetUserStatus(_context.UserId, true);
+        }
+
+
         [When(@"User is deleted")]
         public async Task WhenUserIsDeleted()
         {
@@ -120,20 +130,19 @@ namespace Task9.Steps
             _context.UserId = _context.RegisterNewUserResponse.Body;
         }
 
-
-
-        [When(@"Change user IsActive status to true")]
-        public async Task WhenChangeUserIsActiveStatusToTrue()
+        [Given(@"New user is created with name '([^']*)' and last name '([^']*)'")]
+        public async Task GivenNewUserIsCreatedWithNameAndLastName(string name, string last)
         {
-           _context.SetUserStatusToTrueResponse = await _userServiceClient.SetUserStatus(_context.UserId, true);
+            var request = _userGenerator.GenerateRegisterNewUserRequest(name, last);
+            _context.RegisterNewUserResponse = await _userServiceClient.RegisterNewUser(request);
+            _context.UserId = _context.RegisterNewUserResponse.Body;
         }
 
-        [When(@"Change user IsActive status to false")]
-        public async Task WhenChangeUserIsActiveStatusToFalse()
+        [When(@"Change user IsActive status to '([^']*)'")]
+        public async Task WhenChangeUserIsActiveStatusTo(bool status)
         {
-            _context.SetUserStatusToFalseResponse = await _userServiceClient.SetUserStatus(_context.UserId, false);
+            _context.SetUserStatusResponse = await _userServiceClient.SetUserStatus(_context.UserId, status);
         }
-
 
         [When(@"Get user status")]
         public async Task WhenGetUserStatus()

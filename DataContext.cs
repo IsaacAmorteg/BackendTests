@@ -17,7 +17,13 @@ namespace Task9
 
         public CommonResponse<bool> GetUserStatusResponse;
 
-        public readonly string NoElementsMessage = "Sequence contains no elements";              
+        public readonly string NoElementsMessage = "Sequence contains no elements";
+
+        public readonly string NotActiveErrorMessage = "not active user";
+
+        public readonly string PrecisionDigitsErrorMessage = "Amount value must have precision 2 numbers after dot";
+
+        public readonly string IncorrectAmountErrorMessage = "Amount cannot be '0'";
 
         public readonly int NonExistingUserId = 0;
 
@@ -29,8 +35,10 @@ namespace Task9
 
         public CommonResponse<object> DeleteUserResponse;
 
-        public CommonResponse<bool> SetUserStatusToTrueResponse;
+        public CommonResponse<bool> SetUserStatusResponse;
 
-        public CommonResponse<bool> SetUserStatusToFalseResponse;
+        public CommonResponse<decimal> GetBalanceResponse;
+
+        internal CommonResponse<Guid> ChargeResponse;
     }
 }

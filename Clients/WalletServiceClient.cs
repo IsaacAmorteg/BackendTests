@@ -14,6 +14,9 @@ namespace Task9.Clients
 {
     public class WalletServiceClient
     {
+        private static readonly Lazy<WalletServiceClient> _lazy = new Lazy<WalletServiceClient>(() => new WalletServiceClient());
+
+        public static WalletServiceClient Instance => _lazy.Value;
 
         private readonly HttpClient _client = new HttpClient();
         private readonly string _baseUrl = "https://walletservice-uat.azurewebsites.net";
